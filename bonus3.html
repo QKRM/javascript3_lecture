@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS 1주차 실습 - 조건문 마스터하기</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary-color: #61dafb;
+            --accent-color: #4ade80;
+            --warn-color: #f87171;
+            --text-color: #e5e7eb;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Pretendard', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container { max-width: 900px; width: 100%; }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #333;
+            padding-bottom: 1rem;
+        }
+
+        h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #888; font-size: 1.1rem; }
+
+        .exercise-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .exercise-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge {
+            background: var(--primary-color);
+            color: #000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+        }
+
+        h2 { margin: 0; color: var(--accent-color); }
+
+        .scenario {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        ul { padding-left: 1.2rem; }
+        li { margin-bottom: 0.5rem; }
+
+        .code-area {
+            background: #000;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            color: #9cdcfe;
+            margin-top: 1rem;
+            border: 1px solid #444;
+        }
+
+        details {
+            margin-top: 1.5rem;
+            cursor: pointer;
+        }
+
+        summary {
+            color: var(--warn-color);
+            font-weight: bold;
+            outline: none;
+        }
+
+        .solution {
+            margin-top: 1rem;
+            background: #0d0d0d;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #ce9178;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🚀 JS 조건문 실무 트레이닝</h1>
+        <p class="subtitle">빈칸 채우기는 끝! 이제 백지에 직접 로직을 설계해 봅시다.</p>
+    </header>
+
+    <div class="exercise-card">
+        <div class="exercise-header">
+            <span class="badge">Level 1</span>
+            <h2>1. 스마트 에어컨 제어 시스템</h2>
+        </div>
+        <div class="scenario">
+            "실내 온도가 너무 높으면 에어컨을 켜고, 적당하면 끄는 자동화 로직을 만듭니다."
+        </div>
+        <ul>
+            <li><code>currentTemp</code> 변수를 선언하고 숫자 30을 할당하세요.</li>
+            <li>온도가 <b>28도 이상</b>이면 <span class="accent">"에어컨을 가동합니다."</span>를 출력합니다.</li>
+            <li>그렇지 않으면 <span class="accent">"쾌적한 온도입니다."</span>를 출력하세요.</li>
+        </ul>
+        <div class="code-area">// 이곳에 코드를 작성해 보세요.</div>
+        
+        <details>
+            <summary>✅ 정답 예시 보기</summary>
+            <pre class="solution"><code>let currentTemp = 30;
+
+if (currentTemp >= 28) {
+    console.log("에어컨을 가동합니다.");
+} else {
+    console.log("쾌적한 온도입니다.");
+}</code></pre>
+        </details>
+    </div>
+
+    <div class="exercise-card">
+        <div class="exercise-header">
+            <span class="badge" style="background: #facc15;">Level 2</span>
+            <h2>2. 버스 요금 계산기</h2>
+        </div>
+        <div class="scenario">
+            "나이에 따라 달라지는 버스 요금 체계를 구현합니다."
+        </div>
+        <ul>
+            <li><code>age</code> 변수에 학생의 나이를 넣습니다.</li>
+            <li><b>20세 이상:</b> "성인: 1,500원"</li>
+            <li><b>14세 ~ 19세:</b> "청소년: 1,000원"</li>
+            <li><b>8세 ~ 13세:</b> "어린이: 500원"</li>
+            <li><b>7세 이하:</b> "미취학 아동: 무료"</li>
+        </ul>
+        <div class="code-area">// else if 문을 사용하여 계단식 조건을 만드세요.</div>
+        
+        <details>
+            <summary>✅ 정답 예시 보기</summary>
+            <pre class="solution"><code>let age = 16;
+
+if (age >= 20) {
+    console.log("성인: 1,500원");
+} else if (age >= 14) {
+    console.log("청소년: 1,000원");
+} else if (age >= 8) {
+    console.log("어린이: 500원");
+} else {
+    console.log("미취학 아동: 무료");
+}</code></pre>
+        </details>
+    </div>
+
+    <div class="exercise-card">
+        <div class="exercise-header">
+            <span class="badge" style="background: #f87171;">Level 3</span>
+            <h2>3. 특별 할인 쿠폰 발급 로직</h2>
+        </div>
+        <div class="scenario">
+            "로그인 상태를 먼저 확인하고, 조건에 맞는 우수 회원에게만 혜택을 줍니다."
+        </div>
+        <ul>
+            <li><code>isLoggedIn</code>(true/false), <code>purchaseAmount</code>(숫자), <code>isVip</code>(true/false) 변수를 각각 선언하세요.</li>
+            <li><b>1단계:</b> 로그인이 안 되어 있으면 "로그인이 필요합니다."를 출력합니다.</li>
+            <li><b>2단계:</b> 로그인된 경우, 구매 금액이 <b>50,000원 이상</b>이거나 <b>VIP</b>라면 "쿠폰 발급!"을 출력합니다.</li>
+            <li><b>3단계:</b> 둘 다 해당 안 되면 "대상자가 아닙니다."를 출력합니다.</li>
+        </ul>
+        <div class="code-area">// 중첩 if문과 논리 연산자(||)를 조합해 보세요.</div>
+        
+        <details>
+            <summary>✅ 정답 예시 보기</summary>
+            <pre class="solution"><code>let isLoggedIn = true;
+let purchaseAmount = 45000;
+let isVip = true;
+
+if (isLoggedIn === true) {
+    if (purchaseAmount >= 50000 || isVip === true) {
+        console.log("특별 할인 쿠폰 발급!");
+    } else {
+        console.log("대상자가 아닙니다.");
+    }
+} else {
+    console.log("로그인이 필요합니다.");
+}</code></pre>
+        </details>
+    </div>
+
+    <footer style="text-align: center; color: #555; margin-top: 2rem;">
+        © 2026 JS 입문 과정 - 조건문 실습 세션
+    </footer>
+</div>
+
+</body>
+</html>

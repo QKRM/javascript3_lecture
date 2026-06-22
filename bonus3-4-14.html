@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 4주차 14차시 - jQuery 통합 프로젝트</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #0f172a; 
+    color: #f1f5f9; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1150px; 
+    width: 100%; 
+    background: #1e293b; 
+    padding: 3.5rem; 
+    border-radius: 24px; 
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 650px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #334155;
+    transition: all 0.3s ease;
+  }
+  h1 { font-size: 3.2rem; color: #38bdf8; line-height: 1.2; margin-bottom: 1rem; }
+  h2 { font-size: 2.2rem; color: #4ade80; border-bottom: 1px solid #334155; padding-bottom: 1.5rem; margin-bottom: 2rem; margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.1rem; font-size: 1.15rem; line-height: 1.6; color: #cbd5e1; }
+  li::before { content: '→'; position: absolute; left: 0; color: #38bdf8; font-weight: bold; }
+  
+  pre { 
+    background: #020617; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 0.85rem; 
+    color: #94a3b8; 
+    border: 1px solid #1e293b; 
+    line-height: 1.4;
+    margin: 0.5rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #38bdf8; color: #0f172a; border-color: #38bdf8; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #475569; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #38bdf8; font-weight: 700; }
+  .accent { color: #fbbf24; font-weight: 700; }
+  
+  .practice-box { background: rgba(56, 189, 248, 0.05); border: 1px solid #38bdf8; padding: 1.1rem; border-radius: 12px; margin-top: 0.8rem; }
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app"></div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- Intro ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 4주차 14차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>jQuery 통합 프로젝트: 스마트 대시보드</span><br><br><span style='color:#64748b; font-size:1.1rem;'>지금까지 배운 모든 기술을 하나의 완성된 웹 서비스로 조립합니다.</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 프로젝트 핵심 목표",
+    items: [
+      "기능 단위의 코드를 조립하여 <span class='highlight'>완성형 페이지</span>를 구축합니다.",
+      "사용자 경험(UX)을 극대화하는 <span class='highlight'>스크롤 잠금</span>과 <span class='highlight'>전파 차단</span> 기술을 실습합니다.",
+      "실시간 <span class='highlight'>폼 검증</span>과 <span class='highlight'>Ajax 데이터 통신</span>을 구현합니다.",
+      "상호 배타적 논리를 활용한 <span class='highlight'>지능형 아코디언</span> 시스템을 완성합니다."
+    ]
+  },
+
+  // --- 구조 설계 1 ---
+  { 
+    type: "code", 
+    title: "[Structure 1] 헤더 및 히어로 섹션", 
+    desc: "페이지의 첫인상을 결정하는 상단 구조입니다.", 
+    code: `<!-- 외부 라이브러리 및 스타일 연결 -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>
+<link rel="stylesheet" href="style.css">
+
+<header>
+    <h1>Dashboard</h1>
+    <nav>
+        <ul class="nav-list">
+            <li><a href="#features">기능</a></li>
+            <li><a href="#table">데이터</a></li>
+            <li><a href="#form">연락처</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero">
+    <h2>jQuery 통합 프로젝트</h2>
+    <p>한 줄의 코드로 만드는 인터랙티브 웹</p>
+    <button id="modalBtn">공지 확인</button>
+</section>`, 
+    answer: "핵심: 시맨틱 태그(header, nav)를 사용해 구조적 의미를 부여합니다." 
+  },
+
+  // --- 구조 설계 2 ---
+  { 
+    type: "code", 
+    title: "[Structure 2] 기능 그리드 및 카드", 
+    desc: "주요 인터랙션 요소들이 배치되는 핵심 본문입니다.", 
+    code: `<section id="features" class="grid-container">
+    <!-- 카운터 박스 -->
+    <article class="card">
+        <h3>실시간 카운터</h3>
+        <span id="countNum">0</span>
+        <button id="addBtn">+ 1 증가</button>
+    </article>
+
+    <!-- Ajax 데이터 리스트 -->
+    <article class="card">
+        <h3>Ajax 데이터 로드</h3>
+        <button id="fetchBtn">뉴스 가져오기</button>
+        <ul id="newsList"></ul>
+    </article>
+
+    <!-- FAQ 아코디언 -->
+    <article class="card">
+        <h3>FAQ 아코디언</h3>
+        <div class="acc-item">
+            <div class="acc-title">jQuery 장점?</div>
+            <div class="acc-content">코드가 간결하고 생산성이 높습니다.</div>
+        </div>
+    </article>
+</section>`, 
+    answer: "핵심: Grid 레이아웃을 위해 article 태그들을 container로 감쌉니다." 
+  },
+
+  // --- 스타일 설계 1 ---
+  { 
+    type: "code", 
+    title: "[Style 1] 스크롤 잠금 및 기본 레이아웃", 
+    desc: "모달 실행 시 필수적인 '스크롤 방어' 스타일입니다.", 
+    code: `<style>
+  /* [필수] 모달 오픈 시 뒷배경 스크롤 방지용 클래스 */
+  body.no-scroll {
+    overflow: hidden !important; /* 스크롤바 숨김 */
+    touch-action: none;         /* 모바일 터치 스크롤 차단 */
+  }
+
+  /* 헤더 고정 정렬 */
+  header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  /* 3열 그리드 시스템 */
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+</style>`, 
+    answer: "팁: .no-scroll 클래스는 나중에 JS에서 addClass로 부여합니다." 
+  },
+
+  // --- 스타일 설계 2 ---
+  { 
+    type: "code", 
+    title: "[Style 2] 모달 및 컴포넌트 디자인", 
+    desc: "화면 정중앙 배치와 레이어 순서를 정의합니다.", 
+    code: `<style>
+  /* 화면 전체를 덮는 반투명 배경 */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none; /* 초기 상태 숨김 */
+    justify-content: center; align-items: center;
+    z-index: 9999;
+  }
+
+  /* 중앙 팝업 박스 */
+  .modal-window {
+    background: #fff; padding: 40px; 
+    border-radius: 20px; text-align: center;
+  }
+
+  /* 아코디언 답변 초기 숨김 */
+  .acc-content { display: none; padding: 15px; }
+</style>`, 
+    answer: "핵심: z-index는 모달이 항상 최상위에 오도록 높은 값을 줍니다." 
+  },
+
+  // --- 로직 구현 1 ---
+  { 
+    type: "code", 
+    title: "[Logic 1] 카운터 및 모달 제어", 
+    desc: "기본적인 클릭 이벤트와 스타일 조작입니다.", 
+    code: `<script>
+$(document).ready(function() {
+    // 1. 카운터: 숫자 증가 및 색상 변경
+    let count = 0;
+    $("#addBtn").on("click", function() {
+        count++;
+        $("#countNum").text(count)
+                     .css("color", count % 2 === 0 ? "#38bdf8" : "#f87171");
+    });
+
+    // 2. 모달 열기: fadeIn 및 스크롤 잠금
+    $("#modalBtn").click(function() {
+        $("#modal").fadeIn().css("display", "flex");
+        $("body").addClass("no-scroll"); // 바디 스크롤 차단
+    });
+});
+<\/script>`, 
+    answer: "설명: .css('display', 'flex')는 fadeIn 후에도 중앙 정렬을 유지하기 위함입니다." 
+  },
+
+  // --- 로직 구현 2 ---
+  { 
+    type: "code", 
+    title: "[Logic 2] 전파 차단 및 닫기", 
+    desc: "버블링 현상을 막아 정교한 모달을 완성합니다.", 
+    code: `<script>
+    // 3. 모달 닫기
+    $("#closeModal, .modal-overlay").click(function() {
+        $("#modal").fadeOut();
+        $("body").removeClass("no-scroll"); // 스크롤 차단 해제
+    });
+
+    // 4. [중요] 전파 차단: 본문 클릭 시 배경 이벤트 실행 방지
+    $(".modal-window").click(function(e) {
+        e.stopPropagation(); // 배경(부모)으로의 신호 전달을 끊음
+    });
+<\/script>`, 
+    answer: "진단: 전파 차단이 없다면 팝업 본문을 클릭해도 창이 닫혀버립니다." 
+  },
+
+  // --- 로직 구현 3 ---
+  { 
+    type: "code", 
+    title: "[Logic 3] 실시간 검증 및 Ajax 통신", 
+    desc: "사용자 입력 반응과 서버 데이터 처리입니다.", 
+    code: `<script>
+    // 5. 비밀번호 실시간 유효성 체크
+    $("#pwInput").on("input", function() {
+        const val = $(this).val();
+        if (val.length >= 8) {
+            $("#pwMsg").text("안전합니다.").css("color", "#4ade80");
+        } else {
+            $("#pwMsg").text("8자 이상 입력하세요.").css("color", "#f87171");
+        }
+    });
+
+    // 6. Ajax 데이터 로드 (외부 JSON 예시)
+    $("#fetchBtn").click(function() {
+        $.ajax({
+            url: "https://jsonplaceholder.typicode.com/posts?_limit=3",
+            method: "GET",
+            success: function(data) {
+                $("#newsList").empty(); // 이전 목록 초기화
+                data.forEach(item => {
+                    $("#newsList").append(\`<li>\${item.title}</li>\`);
+                });
+            }
+        });
+    });
+<\/script>`, 
+    answer: "특징: Ajax는 페이지 새로고침 없이 데이터만 쏙 가져오는 강력한 도구입니다." 
+  },
+
+  // --- 로직 구현 4 ---
+  { 
+    type: "code", 
+    title: "[Logic 4] 배타적 아코디언 및 폼 방어", 
+    desc: "다른 요소를 지배하는 로직과 기본 동작 제어입니다.", 
+    code: `<script>
+    // 7. 아코디언: 하나가 열리면 남은 닫히는 배타적 로직
+    $(".acc-title").click(function() {
+        // 나를 제외한(.not) 다른 답변들을 먼저 닫음
+        $(".acc-content").not($(this).next()).slideUp();
+        
+        // 내 답변만 부드럽게 토글
+        $(this).next(".acc-content").stop().slideToggle();
+    });
+
+    // 8. 폼 제출 방어: 필수 동의 체크
+    $("#mainForm").submit(function(e) {
+        e.preventDefault(); // 페이지 새로고침(전송) 강제 중단
+        if (!$("#agree").is(":checked")) {
+            alert("약관 동의가 필요합니다!");
+        } else {
+            alert("성공적으로 제출되었습니다!");
+        }
+    });
+<\/script>`, 
+    answer: "핵심: .not()과 preventDefault()는 실제 웹 서비스의 필수 스킬입니다." 
+  },
+
+  { 
+    type: "content", 
+    title: "📝 통합 프로젝트 최종 점검", 
+    items: [
+      "<b>구조(HTML):</b> 시맨틱 태그로 정보의 의미를 담았는가?",
+      "<b>디자인(CSS):</b> Flex/Grid와 스크롤 잠금 상태를 완벽히 이해했는가?",
+      "<b>기능(jQuery):</b> 이벤트 전파와 비동기 통신의 흐름을 제어할 수 있는가?",
+      "<b>UX:</b> 사용자의 실수(광클, 미동의 제출)를 코드가 방어하고 있는가?"
+    ]
+  },
+  { 
+    type: "title", 
+    title: "모든 과정을 완수하셨습니다! 🏆", 
+    subtitle: "<span class='highlight'>이제 여러분은 기획자의 아이디어를 코드로 실현할 수 있는 개발자입니다.</span><br><br><span style='color:#777;'>지금까지 만든 조각들을 모아 여러분만의 멋진 포트폴리오를 완성하세요!</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `<div style="text-align:center;" class="fade-in">
+      <h1 style="font-size:3.5rem;">${data.title}</h1>
+      <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+      <p style="font-size:1.6rem;">${data.subtitle}</p>
+    </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `<div class="fade-in">
+      <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #334155; padding-bottom:1.5rem;">${data.title}</h2>
+      <ul>${lis}</ul>
+    </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `<div class="fade-in">
+      <h2 style="font-size:2.1rem; color:#fbbf24; border-bottom:1px solid #334155; padding-bottom:0.8rem;">${data.title}</h2>
+      <p style="font-size:1.05rem; color:#94a3b8; margin-bottom:0.8rem;">${data.desc}</p>
+      <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+      <div class="practice-box"><p style="font-weight:bold; color:#38bdf8; margin:0;">💡 ${data.answer}</p></div>
+    </div>`;
+  }
+
+  app.innerHTML = `<div class="slide-content">${contentHtml}</div><div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>`;
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function nextSlide() { if (currentIndex < slideData.length - 1) { currentIndex++; renderSlide(currentIndex); } }
+function prevSlide() { if (currentIndex > 0) { currentIndex--; renderSlide(currentIndex); } }
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') nextSlide(); else if (e.key === 'ArrowLeft') prevSlide(); });
+renderSlide(currentIndex);
+</script>
+</body>
+</html>

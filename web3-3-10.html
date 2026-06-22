@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 3주차 10차시 - 클래스 제어 메서드</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #121212; 
+    color: #e5e7eb; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1100px; 
+    width: 100%; 
+    background: #1e1e1e; 
+    padding: 3rem; 
+    border-radius: 24px; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 620px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+  }
+  h1 { font-size: 3.5rem; color: #61dafb; line-height: 1.2; margin-bottom: 1rem; }
+  h2 { font-size: 2.4rem; color: #4ade80; border-bottom: 1px solid #333; padding-bottom: 1.5rem; margin-bottom: 2rem; margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.1rem; font-size: 1.15rem; line-height: 1.6; color: #d1d5db; }
+  li::before { content: '→'; position: absolute; left: 0; color: #61dafb; font-weight: bold; }
+  
+  pre { 
+    background: #0d0d0d; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 1.05rem; 
+    color: #9cdcfe; 
+    border: 1px solid #2d2d2d; 
+    line-height: 1.5;
+    margin: 0.5rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #61dafb; color: #000; border-color: #61dafb; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #555; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #61dafb; font-weight: 700; }
+  .accent { color: #4ade80; font-weight: 700; }
+  .warn { color: #f87171; font-weight: 700; }
+  
+  .code-breakdown { background: #252525; padding: 1.2rem; border-left: 5px solid #61dafb; margin: 1.1rem 0; font-size: 1.1rem; border-radius: 0 8px 8px 0; }
+  .practice-box { background: rgba(250, 204, 21, 0.05); border: 1px solid #facc15; padding: 1.1rem; border-radius: 12px; margin-top: 0.8rem; }
+
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app"></div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- 인트로 ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 3주차 10차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>클래스 제어 메서드</span><br><br><span style='color:#888; font-size:1.1rem;'>1교시: CSS와 스크립트의 분리 (addClass, removeClass)<br>2교시: 상태 기반 UI 제어 (toggleClass, hasClass)</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 오늘의 학습 목표",
+    items: [
+      "디자인(CSS)과 로직(JS)을 분리하는 <span class='highlight'>상태 기반 UI</span>의 개념을 이해합니다.",
+      "<span class='highlight'>addClass()</span>와 <span class='highlight'>removeClass()</span>로 요소의 스타일을 동적으로 입히고 벗깁니다.",
+      "<span class='highlight'>toggleClass()</span>를 활용해 온/오프 스위치 기능을 간결하게 구현합니다.",
+      "<span class='highlight'>hasClass()</span>로 현재 요소의 상태를 체크하여 복잡한 분기 처리를 실습합니다."
+    ]
+  },
+
+  // --- 1교시 ---
+  { 
+    type: "content", 
+    title: "1교시. 왜 클래스를 제어해야 할까요?", 
+    items: [
+      "지난 시간엔 <code>.css()</code> 메서드로 직접 스타일을 고쳤습니다.",
+      "하지만 스타일이 많아지면 자바스크립트 코드가 너무 길고 복잡해집니다.",
+      "실무에서는 <span class='accent'>CSS에 디자인을 미리 정의</span>해두고, JS로는 클래스 이름만 교체합니다.",
+      "이것이 유지보수에 훨씬 유리한 <b>관심사 분리</b> 전략입니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🛠️ addClass() & removeClass()", 
+    items: [
+      "<b>.addClass('클래스명')</b>: 선택한 요소에 새로운 클래스를 추가합니다.",
+      "<b>.removeClass('클래스명')</b>: 선택한 요소에서 특정 클래스를 제거합니다.",
+      "<div class='code-breakdown'><b>$('.box').addClass('active');</b> // box에 active 스타일을 입혀라</div>",
+      "<span class='warn'>주의:</span> 괄호 안에 마침표(.)를 찍지 않습니다. 이름만 적으세요!"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 1-1] 온/오프 버튼 (구조)", 
+    desc: "먼저 HTML 구조와 CSS 상태를 작성해봅시다.", 
+    code: `<!-- CSS 스타일 -->
+<style>
+  .box { width:100px; height:100px; background:#444; }
+  .on { background: #facc15; box-shadow: 0 0 20px #facc15; }
+</style>
+
+<!-- HTML 구조 -->
+<div class="box"></div>
+<button id="btn-on">켜기</button>
+<button id="btn-off">끄기</button>`, 
+    answer: "다음 페이지에서 로직을 완성합니다." 
+  },
+  { 
+    type: "code", 
+    title: "[실습 1-2] 온/오프 버튼 (로직)", 
+    desc: "버튼 클릭 시 클래스를 추가/제거하는 제이쿼리를 작성하세요.", 
+    code: `<!-- jQuery 코드 -->
+<script>
+  $("#btn-on").click(function() {
+      // 1. 박스에 'on' 클래스를 추가하세요.
+      $(".box").[         ]("on");
+  });
+  
+  $("#btn-off").click(function() {
+      // 2. 박스에서 'on' 클래스를 제거하세요.
+      $(".box").[            ]("on");
+  });
+<\/script>`, 
+    answer: "정답: addClass / removeClass" 
+  },
+  { 
+    type: "content", 
+    title: "🔄 toggleClass(): 스위치 마법사", 
+    items: [
+      "클래스가 있으면 제거하고, 없으면 추가해주는 <span class='highlight'>토글</span> 기능을 한 번에 처리합니다.",
+      "버튼 하나로 메뉴를 열고 닫거나, 좋아요 버튼을 구현할 때 필수적입니다.",
+      "<div class='code-breakdown'><b>$('button').click(function() {<br>&nbsp;&nbsp;$('.menu').toggleClass('open');<br>});</b></div>"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 2] 아코디언 메뉴 기초", 
+    desc: "질문을 클릭하면 답변 영역이 토글되는 기능을 구현하세요.", 
+    code: `<!-- CSS/HTML 생략 (show 클래스 토글) -->
+<script>
+  $(".question").click(function() {
+      $(".answer").[             ]("show");
+  });
+<\/script>`, 
+    answer: "정답: toggleClass" 
+  },
+  { 
+    type: "content", 
+    title: "☕ 쉬는 시간 (10분)", 
+    items: [
+      "클래스를 붙이고 떼는 기본 메서드를 마스터했습니다.",
+      "다음 시간에는 '클래스가 있는지 확인'하는 법과 실무 탭 메뉴를 배웁니다."
+    ]
+  },
+
+  // --- 2교시 ---
+  { 
+    type: "content", 
+    title: "2교시. 똑똑한 체크: hasClass()", 
+    items: [
+      "선택한 요소에 특정 클래스가 있는지 확인하여 <span class='accent'>true/false</span>를 반환합니다.",
+      "상태를 먼저 확인하고 그에 따라 다른 동작을 시킬 때 사용합니다.",
+      "<div class='code-breakdown'><b>if ( $('.box').hasClass('active') ) { ... }</b></div>"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 3] 조건부 상태 제어", 
+    desc: "클래스 유무에 따라 경고창을 띄워봅시다.", 
+    code: `<script>
+  $("#check-btn").click(function() {
+      // status 요소가 locked 클래스를 가지고 있는지 체크!
+      if ( $("#status").[          ]("locked") ) {
+          alert("먼저 잠금을 해제해야 합니다.");
+      }
+  });
+<\/script>`, 
+    answer: "정답: hasClass" 
+  },
+  { 
+    type: "content", 
+    title: "📱 실무 예제: 탭 메뉴(Tab Menu) 로직", 
+    items: [
+      "여러 개의 탭 중에서 <b>클릭한 요소만 'active'</b> 클래스를 주는 기술입니다.",
+      "1. 모든 탭에서 'active' 일괄 제거 (초기화)",
+      "2. 내가 클릭한 탭(`$(this)`)에만 'active' 추가",
+      "이 패턴은 내비게이션 바, 갤러리 등 모든 곳에 쓰입니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 4-1] 탭 활성화 (구조)", 
+    desc: "탭 메뉴의 스타일과 HTML 구조입니다.", 
+    code: `<!-- CSS 스타일 -->
+<style>
+  .tab { padding: 10px; background: #333; cursor: pointer; }
+  .tab.active { background: #61dafb; color: #000; font-weight: bold; }
+</style>
+
+<!-- HTML 구조 -->
+<div class="tabs">
+  <span class="tab active">홈</span>
+  <span class="tab">프로필</span>
+  <span class="tab">설정</span>
+</div>`, 
+    answer: "다음 페이지에서 탭 전환 로직을 작성합니다." 
+  },
+  { 
+    type: "code", 
+    title: "[실습 4-2] 탭 활성화 (로직)", 
+    desc: "클릭한 탭만 하이라이트되는 제이쿼리 로직을 완성하세요.", 
+    code: `<script>
+  $(".tab").click(function() {
+      // 1. 모든 탭에서 active 스타일을 제거하세요.
+      $(".tab").removeClass("active");
+      
+      // 2. 방금 클릭한 '나'에게만 active를 추가하세요.
+      [         ].[         ]("active");
+  });
+<\/script>`, 
+    answer: "정답: $(this) / addClass" 
+  },
+  { 
+    type: "content", 
+    title: "🎨 다크모드/라이트모드 테마 제어", 
+    items: [
+      "<code>body</code> 태그에 클래스를 주어 사이트 전체 테마를 바꿀 수 있습니다.",
+      "<b>.dark-theme</b> 클래스가 붙으면 배경은 검게, 글자는 하얗게 미리 설정해둡니다.",
+      "버튼 클릭 시 <code>$('body').toggleClass('dark-theme')</code> 한 줄로 테마 변경 끝!"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[최종 미션-1] UI 컨트롤러 (구조)", 
+    desc: "복합적인 UI 제어를 위한 스타일과 구조입니다.", 
+    code: `<!-- CSS -->
+<style>
+  body.dark { background: #000; color: #fff; }
+  .side-menu { width: 0; overflow: hidden; transition: 0.3s; background: #222; }
+  .side-menu.open { width: 200px; padding: 20px; }
+</style>
+
+<!-- HTML -->
+<button id="theme-toggle">테마 변경</button>
+<button id="menu-btn">메뉴 열기/닫기</button>
+<div class="side-menu">사이드 메뉴 내용...</div>`, 
+    answer: "다음 페이지에서 종합 제어 로직을 작성합니다." 
+  },
+  { 
+    type: "code", 
+    title: "[최종 미션-2] UI 컨트롤러 (로직)", 
+    desc: "토글 메서드를 활용해 각 기능을 완성하세요.", 
+    code: `<script>
+  // 1. 버튼 클릭 시 body에 'dark' 클래스를 토글하세요.
+  $("#theme-toggle").click(function() {
+      $("body").[             ]("dark");
+  });
+
+  // 2. 버튼 클릭 시 사이드 메뉴에 'open' 클래스를 토글하세요.
+  $("#menu-btn").click(function() {
+      $(".side-menu").[             ]("open");
+  });
+<\/script>`, 
+    answer: "정답: toggleClass / toggleClass" 
+  },
+  { 
+    type: "content", 
+    title: "📝 오늘의 요약", 
+    items: [
+      "<b>addClass / removeClass</b>: 명확한 스타일 주입 및 제거",
+      "<b>toggleClass</b>: 스위치처럼 상태를 반전시키는 효율적 도구",
+      "<b>hasClass</b>: 현재 요소가 특정 상태인지 체크하는 조건기",
+      "<b>상태 기반 UI</b>: 스타일은 CSS가, 전환은 JS가 담당하는 깔끔한 구조"
+    ]
+  },
+  { 
+    type: "title", 
+    title: "수고하셨습니다! 👏", 
+    subtitle: "<span class='highlight'>이제 여러분은 전문적인 웹 UI를 조작할 수 있습니다.</span><br><br><span style='color:#777;'>다음 차시 예고: 부드러운 움직임 '제이쿼리 애니메이션'</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `
+      <div style="text-align:center;" class="fade-in">
+        <h1 style="font-size:3.5rem; margin-bottom:1.5rem; color:#61dafb; line-height:1.2;">${data.title}</h1>
+        <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+        <p style="font-size:1.6rem; line-height:1.6; color:#ccc; margin-top:2rem;">${data.subtitle}</p>
+      </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #333; padding-bottom:1.5rem; margin-bottom:2.2rem; margin-top:0;">${data.title}</h2>
+        <ul>${lis}</ul>
+      </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.1rem; color:#facc15; border-bottom:1px solid #333; padding-bottom:1rem; margin-bottom:1rem; margin-top:0;">${data.title}</h2>
+        <p style="font-size:1.15rem; margin-bottom:1rem; color:#aaa;">${data.desc}</p>
+        <div style="position:relative;">
+          <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+        </div>
+        <div class="practice-box">
+          <p style="font-weight:bold; color:#f87171; font-size:1.1rem; margin:0;">💡 ${data.answer}</p>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="slide-content">
+      ${contentHtml}
+    </div>
+    <div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>
+  `;
+  
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function nextSlide() {
+  if (currentIndex < slideData.length - 1) {
+    currentIndex++;
+    renderSlide(currentIndex);
+  }
+}
+
+function prevSlide() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSlide(currentIndex);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    prevSlide();
+  }
+});
+
+renderSlide(currentIndex);
+</script>
+</body>
+</html>

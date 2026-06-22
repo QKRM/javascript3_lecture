@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 2주차 8차시 - 객체 기반 문제 풀이 및 미니 프로젝트</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #121212; 
+    color: #e5e7eb; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1100px; 
+    width: 100%; 
+    background: #1e1e1e; 
+    padding: 3.5rem; 
+    border-radius: 24px; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 620px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+  }
+  h1, h2 { margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.1rem; font-size: 1.15rem; line-height: 1.6; color: #d1d5db; }
+  li::before { content: '→'; position: absolute; left: 0; color: #61dafb; font-weight: bold; }
+  
+  pre { 
+    background: #0d0d0d; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 0.95rem; 
+    color: #9cdcfe; 
+    border: 1px solid #2d2d2d; 
+    line-height: 1.5;
+    margin: 0.8rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #61dafb; color: #000; border-color: #61dafb; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #555; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #61dafb; font-weight: 700; }
+  .accent { color: #4ade80; font-weight: 700; }
+  .warn { color: #f87171; font-weight: 700; }
+  
+  .code-breakdown { background: #252525; padding: 1.2rem; border-left: 5px solid #61dafb; margin: 1.1rem 0; font-size: 1.1rem; border-radius: 0 8px 8px 0; }
+  .practice-box { background: rgba(250, 204, 21, 0.05); border: 1px solid #facc15; padding: 1.1rem; border-radius: 12px; margin-top: 0.8rem; }
+  .tip-box { background: rgba(97, 218, 251, 0.05); border: 1px solid #61dafb; padding: 1.1rem; border-radius: 12px; margin-top: 1rem; }
+
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app">
+  <!-- Slide content will be injected here -->
+</div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- 인트로 ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 2주차 8차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>객체 기반 문제 풀이 & 프로젝트</span><br><br><span style='color:#888; font-size:1.1rem;'>1교시: 객체 내 함수 활용 및 데이터 처리 최적화<br>2교시: 미니 프로젝트 - 도서 목록 관리 시스템</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 오늘의 학습 목표",
+    items: [
+      "객체 내부의 <span class='highlight'>메서드</span>를 활용하여 데이터를 유기적으로 가공합니다.",
+      "복잡한 <span class='highlight'>비즈니스 로직(입/출금, 상태 변경)</span>을 객체 지향적으로 설계합니다.",
+      "데이터 처리 흐름을 최적화하여 <span class='highlight'>가독성 높은 코드</span>를 작성합니다.",
+      "<span class='highlight'>도서 목록 관리 시스템</span> 프로젝트를 통해 데이터 구조 설계 능력을 완성합니다."
+    ]
+  },
+
+  // --- 1교시: 객체 내 함수 활용 및 최적화 ---
+  { 
+    type: "content", 
+    title: "1교시. 데이터 처리의 중심: 메서드", 
+    items: [
+      "객체는 단순히 데이터를 담는 '그릇'이 아닙니다.",
+      "데이터를 스스로 관리하고 가공하는 <span class='highlight'>행동(Method)</span>이 포함되어야 진짜 객체입니다.",
+      "객체 외부에서 데이터를 직접 수정하기보다, 객체 내부 메서드에 요청하는 방식이 더 안전합니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🧐 데이터 흐름 최적화란?", 
+    items: [
+      "변수가 사방에 흩어져 있으면 코드가 꼬이기 쉽습니다.",
+      "관련된 변수와 함수를 하나의 객체로 <span class='accent'>캡슐화</span>하면 유지보수가 쉬워집니다.",
+      "이것이 현대 프로그래밍의 핵심인 <b>객체 지향적 사고(Object-Oriented Thinking)</b>입니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 1] 은행 계좌 시스템 설계", 
+    desc: "입금(deposit)과 출금(withdraw) 기능을 가진 계좌 객체를 완성하세요.", 
+    code: `const account = {
+    owner: "제임스",
+    balance: 10000,
+    deposit: function(amount) {
+        this.balance += amount;
+        console.log(amount + "원 입금 완료. 잔액: " + this.balance);
+    },
+    withdraw: function(amount) {
+        if (this.balance >= amount) {
+            this.balance [    ] amount;
+            console.log(amount + "원 출금 완료.");
+        } else {
+            console.log("잔액이 부족합니다.");
+        }
+    }
+};
+
+account.deposit(5000);
+account.withdraw(3000);`, 
+    answer: "정답: -= (출금 시 잔액을 차감합니다.)" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 2] 성적 처리기 최적화", 
+    desc: "국어, 영어, 수학 점수를 합산하고 평균을 반환하는 메서드를 작성하세요.", 
+    code: `const student = {
+    name: "에이미",
+    scores: { kor: 80, eng: 90, math: 85 },
+    getAverage: function() {
+        const sum = this.scores.kor + this.scores.eng + this.scores.math;
+        return [     ] / 3;
+    }
+};
+
+console.log(student.name + "의 평균 점수: " + student.getAverage());`, 
+    answer: "정답: sum (객체 내부 데이터를 활용해 평균을 계산합니다.)" 
+  },
+  { 
+    type: "content", 
+    title: "⚡ 메서드 체이닝과 가독성", 
+    items: [
+      "메서드가 실행된 후 <code>return this;</code>를 하면 연속해서 호출할 수 있습니다.",
+      "예: <code>account.deposit(100).withdraw(50);</code>",
+      "이런 방식은 코드를 더 직관적이고 아름답게 만들어 줍니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 3] 상태 메시지 생성기", 
+    desc: "메시지를 누적하고 출력하는 간단한 로직을 완성해봅시다.", 
+    code: `const logger = {
+    logs: "",
+    addLog: function(msg) {
+        this.logs += msg + "\\n";
+    },
+    printAll: function() {
+        console.log("=== 전체 로그 ===\\n" + [         ]);
+    }
+};
+
+logger.addLog("시스템 시작");
+logger.addLog("데이터 로드 완료");
+logger.printAll();`, 
+    answer: "정답: this.logs" 
+  },
+  { 
+    type: "content", 
+    title: "☕ 쉬는 시간 (10분)", 
+    items: [
+      "객체 내부에서 <code>this</code>를 활용해 데이터를 처리하는 법을 익혔습니다.",
+      "다음 시간에는 '도서 목록 관리'라는 실무 미니 프로젝트를 시작합니다."
+    ]
+  },
+
+  // --- 2교시: 미니 프로젝트 - 도서 관리 시스템 ---
+  { 
+    type: "content", 
+    title: "2교시. 프로젝트: 도서 목록 관리 시스템", 
+    items: [
+      "우리가 도서관의 개발자가 되었다고 상상해 봅시다.",
+      "책 한 권은 하나의 <span class='highlight'>객체</span>로 표현됩니다.",
+      "책은 제목(title), 저자(author), 대여여부(isLent)라는 속성을 가집니다.",
+      "기능: 정보 보기, 대여하기, 반납하기"
+    ]
+  },
+  { 
+    type: "content", 
+    title: "📊 데이터 구조 설계 (Modeling)", 
+    items: [
+      "데이터는 어떻게 생겨야 할까요?",
+      "<pre>{\n  title: '자바스크립트 정복',\n  author: '코딩왕',\n  isLent: false\n}</pre>",
+      "이 구조가 일관되게 유지되어야 시스템을 안정적으로 운영할 수 있습니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[프로젝트 1] 도서 객체 기본 설계", 
+    desc: "책의 정보를 한 줄로 요약해서 보여주는 메서드를 완성하세요.", 
+    code: `const book1 = {
+    title: "어린왕자",
+    author: "생텍쥐페리",
+    isLent: false,
+    getInfo: function() {
+        const status = this.isLent ? "[대여 중]" : "[대여 가능]";
+        return status + " " + this.title + " - " + this.author;
+    }
+};
+
+console.log(book1.getInfo());`, 
+    answer: "실행 결과: [대여 가능] 어린왕자 - 생텍쥐페리" 
+  },
+  { 
+    type: "code", 
+    title: "[프로젝트 2] 대여 상태 스위치 만들기", 
+    desc: "대여 여부를 반전(true <-> false)시키는 메서드를 작성하세요.", 
+    code: `const book2 = {
+    title: "해리포터",
+    isLent: false,
+    toggleLend: function() {
+        // 현재 상태의 반대값으로 변경합니다.
+        this.isLent = [      ]this.isLent;
+        console.log(this.title + " 상태 변경 완료!");
+    }
+};
+
+book2.toggleLend();
+console.log("현재 대여 여부:", book2.isLent);`, 
+    answer: "정답: ! (NOT 연산자를 통해 상태를 반전시킵니다.)" 
+  },
+  { 
+    type: "content", 
+    title: "🛠️ 데이터 처리 흐름의 최적화", 
+    items: [
+      "만약 도서가 3권이라면? <span class='accent'>객체 배열</span>을 활용할 수 있습니다.",
+      "반복문과 객체 메서드를 조합하면 수백 권의 책도 한 번에 관리할 수 있습니다.",
+      "이것이 우리가 지난 시간부터 배워온 모든 문법의 결합점입니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 4] 도서 목록 일괄 출력", 
+    desc: "배열에 담긴 책 객체들의 정보를 반복문으로 출력해봅시다.", 
+    code: `const library = [
+    { title: "자바", getInfo: function() { return "도서: " + this.title; } },
+    { title: "파이썬", getInfo: function() { return "도서: " + this.title; } }
+];
+
+for (let i = 0; i < library.length; i++) {
+    console.log(library[i].[          ]());
+}`, 
+    answer: "정답: getInfo (배열 안의 각 객체에 접근하여 메서드를 호출합니다.)" 
+  },
+  { 
+    type: "code", 
+    title: "[최종 미션] 종합 도서 관리 시스템", 
+    desc: "책의 대여 상태를 확인하고 대여해주는 시스템을 완성하세요.", 
+    code: `const myBook = {
+    title: "클린 코드",
+    isLent: false,
+    rentBook: function() {
+        if (this.isLent === true) {
+            console.log("이미 대여 중인 책입니다.");
+        } else {
+            this.isLent = true;
+            console.log(this.title + " 대여가 완료되었습니다.");
+        }
+    }
+};
+
+myBook.rentBook(); // 대여 성공
+myBook.rentBook(); // 이미 대여 중 메시지 출력`, 
+    answer: "객체 내부의 데이터(isLent)에 따라 행동이 바뀌는 로직을 이해하세요." 
+  },
+  { 
+    type: "content", 
+    title: "📝 오늘의 요약", 
+    items: [
+      "<b>메서드 중심 설계:</b> 데이터 수정은 객체 스스로 하도록 설계합니다.",
+      "<b>this의 활용:</b> 메서드 내부에서 자신의 속성에 접근하는 핵심 키워드입니다.",
+      "<b>모델링:</b> 현실의 문제를 책, 계좌 같은 객체 구조로 치환하는 과정입니다.",
+      "<b>최적화:</b> 캡슐화를 통해 코드의 가독성과 유지보수성을 높입니다."
+    ]
+  },
+  { 
+    type: "title", 
+    title: "객체 기반 문제 풀이 완료! 🏆", 
+    subtitle: "여러분은 이제 데이터를 단순하게 다루는 것을 넘어 '시스템'을 설계하기 시작했습니다.<br><br><span style='color:#777;'>2주차 완료! 수고하셨습니다.</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `
+      <div style="text-align:center;" class="fade-in">
+        <h1 style="font-size:3.5rem; margin-bottom:1.5rem; color:#61dafb; line-height:1.2;">${data.title}</h1>
+        <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+        <p style="font-size:1.6rem; line-height:1.6; color:#ccc; margin-top:2rem;">${data.subtitle}</p>
+      </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #333; padding-bottom:1.5rem; margin-bottom:2.2rem; margin-top:0;">${data.title}</h2>
+        <ul>${lis}</ul>
+      </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.1rem; color:#facc15; border-bottom:1px solid #333; padding-bottom:1rem; margin-bottom:1rem; margin-top:0;">${data.title}</h2>
+        <p style="font-size:1.15rem; margin-bottom:1rem; color:#aaa;">${data.desc}</p>
+        <div style="position:relative;">
+          <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+        </div>
+        <div class="practice-box">
+          <p style="font-weight:bold; color:#f87171; font-size:1.1rem; margin:0;">💡 ${data.answer}</p>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="slide-content">
+      ${contentHtml}
+    </div>
+    <div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>
+  `;
+  
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function nextSlide() {
+  if (currentIndex < slideData.length - 1) {
+    currentIndex++;
+    renderSlide(currentIndex);
+  }
+}
+
+function prevSlide() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSlide(currentIndex);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    prevSlide();
+  }
+});
+
+renderSlide(currentIndex);
+</script>
+</body>
+</html>

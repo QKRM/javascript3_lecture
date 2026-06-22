@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 1주차 4차시 - 반복문과 자동화 (실습형)</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #121212; 
+    color: #e5e7eb; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1100px; 
+    width: 100%; 
+    background: #1e1e1e; 
+    padding: 3.5rem; 
+    border-radius: 24px; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+  }
+  h1, h2 { margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.1rem; font-size: 1.15rem; line-height: 1.6; color: #d1d5db; }
+  li::before { content: '→'; position: absolute; left: 0; color: #61dafb; font-weight: bold; }
+  
+  pre { 
+    background: #0d0d0d; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 0.95rem; 
+    color: #9cdcfe; 
+    border: 1px solid #2d2d2d; 
+    line-height: 1.5;
+    margin: 0.8rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #61dafb; color: #000; border-color: #61dafb; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #555; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #61dafb; font-weight: 700; }
+  .accent { color: #4ade80; font-weight: 700; }
+  .warn { color: #f87171; font-weight: 700; }
+  
+  .code-breakdown { background: #252525; padding: 1.2rem; border-left: 5px solid #61dafb; margin: 1.1rem 0; font-size: 1.1rem; border-radius: 0 8px 8px 0; }
+  
+  /* 정답 확인 버튼 및 박스 스타일 (디자인 통일) */
+  .practice-box { 
+    background: rgba(255, 255, 255, 0.02); 
+    border: 1px dashed #444; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    margin-top: 0.8rem; 
+    text-align: center;
+  }
+  .check-answer-btn {
+    background: #facc15;
+    color: #000;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .check-answer-btn:hover { background: #eab308; transform: scale(1.05); }
+  .answer-content { 
+    display: none; 
+    margin-top: 1rem; 
+    color: #f87171; 
+    font-weight: bold; 
+    font-size: 1.15rem; 
+    text-align: left;
+  }
+
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app"></div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- 인트로 ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 1주차 4차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>반복문과 자동화</span><br><br><span style='color:#888; font-size:1.1rem;'>1교시: 단순 반복의 끝 (while & for 루프 기초)<br>2교시: 스마트한 제어 (break, continue & 다량 데이터 처리)</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 오늘의 학습 목표",
+    items: [
+      "프로그래밍의 핵심인 <span class='highlight'>반복문(Loop)</span>의 필요성을 이해합니다.",
+      "조건 중심의 <span class='highlight'>while</span>문과 횟수 중심의 <span class='highlight'>for</span>문 사용법을 익힙니다.",
+      "<span class='highlight'>break</span>와 <span class='highlight'>continue</span>를 활용해 반복 흐름을 정교하게 제어합니다.",
+      "수백 개의 데이터를 단 몇 줄의 코드로 <span class='highlight'>일괄 처리(Automation)</span>하는 법을 배웁니다."
+    ]
+  },
+
+  // --- 1교시: 반복문 기초 ---
+  { 
+    type: "content", 
+    title: "1교시. 왜 반복문이 필요한가?", 
+    items: [
+      "콘솔에 '안녕하세요'를 1,000번 출력해야 한다면?",
+      "복사 붙여넣기로 1,000줄을 쓰는 것은 개발자가 아닙니다.",
+      "반복문은 <span class='accent'>동일하거나 유사한 작업</span>을 컴퓨터에게 대신 시키는 자동화 도구입니다.",
+      "개발자의 생산성은 '얼마나 반복을 잘 제거하느냐'에 달려 있습니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🔄 while 문: 조건이 맞을 때까지", 
+    items: [
+      "특정 <span class='highlight'>조건이 참(true)</span>인 동안 블록 안의 코드를 무한히 반복합니다.",
+      "반복 횟수가 정해지지 않았을 때 유리합니다.",
+      "<div class='code-breakdown'><b>while (조건) { // 반복할 코드; // 증감식; }</b></div>",
+      "<span class='warn'>주의:</span> 조건을 거짓으로 만드는 장치가 없으면 프로그램이 멈추지 않는 '무한 루프'에 빠집니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 1] 1부터 5까지 숫자 세기", 
+    desc: "while문을 사용해 숫자를 하나씩 증가시키며 출력해보세요.", 
+    code: `let count = 1;
+
+while (count [    ] 5) {
+    console.log("현재 숫자: " + count);
+    count [    ] 1; // 값을 1씩 증가시킴
+}`, 
+    answer: "정답: <= / += (또는 count++)" 
+  },
+  { 
+    type: "content", 
+    title: "📊 for 문: 횟수를 정해서 반복하기", 
+    items: [
+      "가장 많이 사용되는 반복문으로, <span class='highlight'>초기값, 조건식, 증감식</span>을 한 줄에 적습니다.",
+      "반복 횟수가 명확할 때 가장 가독성이 좋습니다.",
+      "<div class='code-breakdown'><b>for (초기화; 조건; 증감) { // 반복할 코드 }</b></div>"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 2] for문으로 구구단 2단 만들기", 
+    desc: "for문을 사용해 2 * 1부터 2 * 9까지 출력하는 코드를 완성하세요.", 
+    code: `console.log("=== 2단 시작 ===");
+
+for (let i = 1; i < [    ]; i++) {
+    console.log("2 * " + i + " = " + (2 * i));
+}`, 
+    answer: "정답: 10 (설명: i가 1부터 9까지 돌아야 하므로 10보다 작아야 합니다.)" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 3] 1부터 100까지의 합", 
+    desc: "반복문을 활용해 누적 합계를 구하는 자동화 로직입니다.", 
+    code: `let sum = 0;
+
+for (let i = 1; i <= 100; i++) {
+    sum += [    ];
+}
+
+console.log("1부터 100까지 합산 결과:", sum);`, 
+    answer: "정답: i (매 루프마다 변하는 i값을 sum에 더해줍니다.)" 
+  },
+  { 
+    type: "content", 
+    title: "☕ 쉬는 시간 (10분)", 
+    items: [
+      "기본적인 루프의 구조를 파악했습니다.",
+      "다음 시간에는 루프를 중단하거나 건너뛰는 고급 제어 기술을 배웁니다."
+    ]
+  },
+
+  // --- 2교시: 제어와 자동화 ---
+  { 
+    type: "content", 
+    title: "2교시. 스마트한 흐름 제어: break", 
+    items: [
+      "반복문을 실행하다가 특정 조건에서 <span class='warn'>즉시 중단</span>하고 싶을 때 사용합니다.",
+      "비상 탈출구 역할을 합니다.",
+      "예: 검색 중 원하는 결과를 찾으면 더 이상 찾지 않고 루프를 끝냅니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 4] 보물 찾기 루프", 
+    desc: "숫자 7을 발견하면 즉시 반복을 멈추는 코드를 작성해보세요.", 
+    code: `for (let i = 1; i <= 10; i++) {
+    console.log(i + "번 확인 중...");
+    if (i === 7) {
+        console.log("보물 발견! 중단합니다.");
+        [         ];
+    }
+}`, 
+    answer: "정답: break" 
+  },
+  { 
+    type: "content", 
+    title: "⏭️ 건너뛰기: continue", 
+    items: [
+      "현재 반복 주기만 <span class='accent'>건너뛰고</span> 다음 반복으로 넘어갑니다.",
+      "특정 데이터만 처리하고 싶지 않을 때(필터링) 유용합니다.",
+      "예: 짝수만 출력하고 싶을 때, 홀수는 continue로 패스!"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 5] 홀수만 출력하기 (필터링)", 
+    desc: "짝수인 경우 건너뛰고 홀수만 콘솔에 찍히도록 만들어보세요.", 
+    code: `for (let i = 1; i <= 10; i++) {
+    if (i % 2 === 0) {
+        [            ]; // 짝수면 아래 코드를 무시하고 다음 i로!
+    }
+    console.log("홀수 발견:", i);
+}`, 
+    answer: "정답: continue" 
+  },
+  { 
+    type: "content", 
+    title: "📦 다량의 데이터 일괄 처리 (Preview)", 
+    items: [
+      "자동화의 핵심은 수많은 데이터 요소를 일관되게 처리하는 것입니다.",
+      "아직 배열(Array)을 배우지 않았지만, 반복문이 리스트를 처리하는 방식을 맛봅시다.",
+      "<b>자동화 사례:</b> 수천 명의 회원에게 메일 발송, 성적표 일괄 계산 등"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 6] 챗봇의 반복 응답", 
+    desc: "사용자가 '그만'이라고 할 때까지 계속 말을 따라하는 시스템입니다.", 
+    code: `let input = "";
+let logs = ["안녕", "반가워", "배고파", "그만", "졸려"];
+
+for (let i = 0; i < logs.length; i++) {
+    input = logs[i];
+    if (input === "그만") {
+        console.log("시스템 종료");
+        [         ];
+    }
+    console.log("챗봇 메아리: " + input);
+}`, 
+    answer: "정답: break" 
+  },
+  { 
+    type: "content", 
+    title: "🔍 이중 반복문 (Nested Loop)", 
+    items: [
+      "반복문 안에 또 다른 반복문을 넣을 수 있습니다.",
+      "가로/세로 평면 데이터를 다룰 때 필수적입니다.",
+      "예: 구구단 전체 출력, 바둑판 좌표 생성 등"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 7] 사각형 별 찍기", 
+    desc: "이중 루프를 이용해 3x3 별 모양 사각형을 만들어보세요.", 
+    code: `for (let i = 0; i < 3; i++) {
+    let stars = "";
+    for (let j = 0; j < 3; j++) {
+        stars += "*";
+    }
+    console.log(stars);
+}`, 
+    answer: "실행 결과: 3줄의 ***이 출력됩니다." 
+  },
+  { 
+    type: "code", 
+    title: "[최종 미션] 369 게임 자동화", 
+    desc: "1부터 20까지 숫자 중 3의 배수일 때만 '짝!'을 출력하세요.", 
+    code: `for (let i = 1; i <= 20; i++) {
+    if (i % 3 === [    ]) {
+        console.log("짝!");
+    } else {
+        console.log(i);
+    }
+}`, 
+    answer: "정답: 0 (3으로 나눈 나머지가 0일 때)" 
+  },
+  // ===== 3교시: 심화 (Advanced) =====
+  {
+    type: "title",
+    title: "3교시. 반복문 심화 🔥",
+    subtitle: "<span class='highlight' style='font-size:1.6rem;'>역순/스텝 · 누적 알고리즘 · 소수 판별 · 패턴 출력</span><br><br><span style='color:#888; font-size:1rem;'>단순 반복을 넘어 '알고리즘'을 설계합니다.</span>"
+  },
+  {
+    type: "content",
+    title: "🔁 루프의 방향과 보폭",
+    items: [
+      "for문의 초기값·조건·증감식을 바꾸면 반복을 자유자재로 설계할 수 있습니다.",
+      "<b>역순:</b> <code>for (let i = 10; i > 0; i--)</code> → 카운트다운",
+      "<b>스텝 조절:</b> <code>i += 2</code> → 2칸씩 건너뛰기(짝수만)",
+      "조건식과 증감식의 조합이 곧 알고리즘의 시작입니다."
+    ]
+  },
+  {
+    type: "code",
+    title: "[심화 1] 역순 + 스텝 예측",
+    desc: "이 루프가 출력하는 숫자들을 순서대로 모두 적어보세요.",
+    code: `for (let i = 20; i >= 5; i -= 5) {
+    console.log(i);
+}`,
+    answer: "정답: 20, 15, 10, 5 (5씩 감소, 5는 i>=5라 포함, 다음 0은 조건 탈락)"
+  },
+  {
+    type: "content",
+    title: "🏔️ 누적 패턴: 최댓값 찾기",
+    items: [
+      "합계(sum)처럼, 루프를 돌며 '기록을 갱신'하는 것이 알고리즘의 핵심 패턴입니다.",
+      "최댓값 찾기: <b>현재까지의 최댓값</b>을 변수에 저장해두고 더 큰 값을 만나면 교체합니다.",
+      "<div class='code-breakdown'><b>if (현재값 > max) { max = 현재값; }</b></div>",
+      "최솟값, 평균, 개수 세기 모두 같은 원리로 응용됩니다."
+    ]
+  },
+  {
+    type: "code",
+    title: "[심화 2] 최고 점수 찾기",
+    desc: "scores를 순회하며 가장 높은 점수를 max에 담는 코드를 완성하세요.",
+    code: `let scores = [72, 95, 88, 64, 91];
+let max = 0;
+
+for (let i = 0; i < scores.length; i++) {
+    if (scores[i] [    ] max) {
+        max = scores[i];
+    }
+}
+console.log("최고 점수:", max);`,
+    answer: "정답: > (현재 점수가 기존 max보다 크면 갱신 → 결과 95)"
+  },
+  {
+    type: "content",
+    title: "🚩 플래그(flag)와 break 조합",
+    items: [
+      "참/거짓을 저장하는 <span class='highlight'>플래그 변수</span>로 '발견 여부'를 기록합니다.",
+      "찾는 즉시 <code>break</code>로 불필요한 반복을 줄여 성능을 챙깁니다.",
+      "소수 판별, 중복 검사, 검색 기능의 기본 골격입니다."
+    ]
+  },
+  {
+    type: "code",
+    title: "[심화 3] 소수(Prime) 판별기",
+    desc: "n이 소수인지 판별합니다. 빈칸을 채우고, n=13일 때 결과를 예측하세요.",
+    code: `let n = 13;
+let isPrime = true;
+
+for (let i = 2; i < n; i++) {
+    if (n % i === 0) {   // 나누어떨어지면 약수 존재
+        isPrime = false;
+        [         ];      // 더 볼 필요 없으니 탈출
+    }
+}
+console.log(n + "은(는) 소수인가? " + isPrime);`,
+    answer: "정답: break / 결과는 true (13은 2~12 어떤 수로도 나눠지지 않으므로 소수)"
+  },
+  {
+    type: "content",
+    title: "⭐ 이중 루프 패턴: 피라미드",
+    items: [
+      "바깥 루프 = '줄(행)', 안쪽 루프 = '한 줄에 찍을 개수(열)'.",
+      "안쪽 루프의 조건을 <b>바깥 변수 i에 의존</b>시키면 모양이 변합니다.",
+      "<code>for(j=0; j<=i; j++)</code> → 줄마다 별이 1개씩 늘어나는 삼각형."
+    ]
+  },
+  {
+    type: "code",
+    title: "[심화 4] 직각삼각형 별 찍기 예측",
+    desc: "이 이중 루프가 출력하는 모양을 그려보세요.",
+    code: `for (let i = 1; i <= 4; i++) {
+    let line = "";
+    for (let j = 0; j < i; j++) {
+        line += "*";
+    }
+    console.log(line);
+}`,
+    answer: "정답:\n*\n**\n***\n****\n(i번째 줄에 별 i개 → 계단식 삼각형)"
+  },
+  {
+    type: "code",
+    title: "[최종 심화 미션] FizzBuzz",
+    desc: "전설의 코딩 테스트 문제. 1~15 출력하되, 3의 배수는 'Fizz', 5의 배수는 'Buzz', 둘 다면 'FizzBuzz'. 빈칸을 채우세요.",
+    code: `for (let i = 1; i <= 15; i++) {
+    if (i % 15 === 0) {
+        console.log("FizzBuzz");
+    } else if (i % 3 === 0) {
+        console.log("Fizz");
+    } else if (i % [    ] === 0) {
+        console.log("Buzz");
+    } else {
+        console.log(i);
+    }
+}`,
+    answer: "정답: 5 (핵심: 15(3·5 공배수)를 '가장 먼저' 검사해야 함. 순서를 바꾸면 15에서 Fizz만 나옴)"
+  },
+  {
+    type: "content",
+    title: "📝 오늘의 요약",
+    items: [
+      "<b>while / for:</b> 조건 중심 vs 횟수 중심. 무한 루프 주의!",
+      "<b>break / continue:</b> 즉시 탈출 vs 이번만 패스",
+      "<b>방향·스텝 제어:</b> 역순, i+=2 등으로 반복 설계",
+      "<b>누적/최댓값/플래그:</b> 루프로 기록을 갱신하는 알고리즘 패턴",
+      "<b>이중 루프:</b> 패턴 출력과 평면 데이터 처리의 핵심"
+    ]
+  },
+  { 
+    type: "title", 
+    title: "1주차 모든 과정 완료! 🏆", 
+    subtitle: "<span class='highlight'>변수, 연산자, 조건문, 반복문</span><br>기초 4대 요소를 모두 정복했습니다.<br><br><span style='color:#777;'>2주차 예고: 코드를 묶어 쓰는 '함수'와 '배열'</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `
+      <div style="text-align:center;" class="fade-in">
+        <h1 style="font-size:3.5rem; margin-bottom:1.5rem; color:#61dafb; line-height:1.2;">${data.title}</h1>
+        <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+        <p style="font-size:1.6rem; line-height:1.6; color:#ccc; margin-top:2rem;">${data.subtitle}</p>
+      </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #333; padding-bottom:1.5rem; margin-bottom:2rem; margin-top:0;">${data.title}</h2>
+        <ul>${lis}</ul>
+      </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.1rem; color:#facc15; border-bottom:1px solid #333; padding-bottom:1rem; margin-bottom:1rem; margin-top:0;">${data.title}</h2>
+        <p style="font-size:1.15rem; margin-bottom:1rem; color:#aaa;">${data.desc}</p>
+        <div style="position:relative;">
+          <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+        </div>
+        <div class="practice-box">
+          <button class="check-answer-btn" onclick="showAnswer(this)">정답 확인</button>
+          <div class="answer-content">
+            💡 ${data.answer}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="slide-content">
+      ${contentHtml}
+    </div>
+    <div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>
+  `;
+  
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function showAnswer(btn) {
+  const answerDiv = btn.nextElementSibling;
+  answerDiv.style.display = 'block';
+  btn.style.display = 'none';
+}
+
+function nextSlide() {
+  if (currentIndex < slideData.length - 1) {
+    currentIndex++;
+    renderSlide(currentIndex);
+  }
+}
+
+function prevSlide() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSlide(currentIndex);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    prevSlide();
+  }
+});
+
+renderSlide(currentIndex);
+</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 1주차 1차시 - 변수와 데이터의 추상화</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #121212; 
+    color: #e5e7eb; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1100px; 
+    width: 100%; 
+    background: #1e1e1e; 
+    padding: 3.5rem; 
+    border-radius: 24px; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+  }
+  h1, h2 { margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.2rem; font-size: 1.2rem; line-height: 1.6; color: #d1d5db; }
+  li::before { content: '→'; position: absolute; left: 0; color: #61dafb; font-weight: bold; }
+  
+  pre { 
+    background: #0d0d0d; 
+    padding: 1.5rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 1rem; 
+    color: #9cdcfe; 
+    border: 1px solid #2d2d2d; 
+    line-height: 1.5;
+    margin: 1rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #61dafb; color: #000; border-color: #61dafb; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #555; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #61dafb; font-weight: 700; }
+  .accent { color: #4ade80; font-weight: 700; }
+  .warn { color: #f87171; font-weight: 700; }
+  
+  .code-breakdown { background: #252525; padding: 1.2rem; border-left: 5px solid #61dafb; margin: 1.2rem 0; font-size: 1.1rem; border-radius: 0 8px 8px 0; }
+  .practice-box { background: rgba(250, 204, 21, 0.05); border: 1px solid #facc15; padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
+  .tip-box { background: rgba(97, 218, 251, 0.05); border: 1px solid #61dafb; padding: 1.2rem; border-radius: 12px; margin-top: 1.2rem; }
+
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app">
+  <!-- Slide content will be injected here -->
+</div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- 인트로 ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 1주차 1차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>변수와 데이터의 추상화</span><br><br><span style='color:#888; font-size:1.1rem;'>1교시: 보이지 않는 세계 (Runtime & Memory)<br>2교시: 데이터의 이름과 규칙 (Let, Const & Scope)</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 오늘의 학습 목표",
+    items: [
+      "자바스크립트가 실행되는 환경인 <span class='highlight'>런타임(Runtime)</span>을 이해합니다.",
+      "컴퓨터가 데이터를 기억하는 물리적 원리(<span class='highlight'>메모리 주소</span>)를 배웁니다.",
+      "복잡한 데이터를 단순하게 만드는 <span class='highlight'>추상화</span>의 개념을 익힙니다.",
+      "현대적 변수 선언 방식(<span class='highlight'>let, const</span>)과 유효 범위를 마스터합니다."
+    ]
+  },
+
+  // --- 1교시: 실행 환경과 메모리 ---
+  { 
+    type: "content", 
+    title: "1교시. 보이지 않는 세계: 런타임", 
+    items: [
+      "자바스크립트 코드는 혼자서 움직일 수 없습니다.",
+      "코드를 읽고 실행해주는 '엔진'이 포함된 환경, 즉 <span class='highlight'>런타임(Runtime)</span>이 필요합니다.",
+      "대표적인 런타임: <span class='accent'>Web Browser</span> (Chrome, Safari)와 <span class='accent'>Node.js</span>."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🌐 브라우저 vs Node.js", 
+    items: [
+      "<b>브라우저:</b> 웹 페이지의 버튼을 누르거나 화면을 바꿀 때 사용합니다.",
+      "<b>Node.js:</b> 브라우저 밖(서버, 로컬 컴퓨터)에서 파일을 제어하거나 데이터를 처리할 때 사용합니다.",
+      "우리는 오늘 <b>Node.js 기반의 온라인 컴파일러(Programiz)</b>를 사용할 것입니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 1] 런타임 퀴즈", 
+    desc: "다음 상황에서 어떤 런타임 환경이 더 적합할지 빈칸을 채워보세요.", 
+    code: `1. 웹사이트의 배경색을 빨간색으로 바꾸고 싶을 때?
+   => (          ) 환경
+
+2. 내 컴퓨터에 있는 파일 100개를 하나로 합치고 싶을 때?
+   => (          ) 환경`, 
+    answer: "????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 1] 런타임 퀴즈", 
+    desc: "다음 상황에서 어떤 런타임 환경이 더 적합할지 빈칸을 채워보세요.", 
+    code: `1. 웹사이트의 배경색을 빨간색으로 바꾸고 싶을 때?
+   => (          ) 환경
+
+2. 내 컴퓨터에 있는 파일 100개를 하나로 합치고 싶을 때?
+   => (          ) 환경`, 
+    answer: "정답: 브라우저 / Node.js" 
+  },
+  { 
+    type: "content", 
+    title: "💾 컴퓨터는 어떻게 기억하는가?", 
+    items: [
+      "프로그램이 데이터를 다루려면 어딘가에 저장해야 합니다.",
+      "컴퓨터의 단기 기억 장치인 <span class='highlight'>RAM(메모리)</span>이 그 역할을 수행합니다.",
+      "메모리는 수많은 칸으로 나뉘어 있고, 각 칸은 데이터를 담을 수 있습니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "📍 주소(Address)라는 난제", 
+    items: [
+      "메모리의 각 칸에는 고유한 이름표가 붙어 있습니다.",
+      "이를 <span class='warn'>메모리 주소</span>라고 부르며, <code>0x0000A1B2</code> 처럼 사람이 이해하기 어려운 숫자로 되어 있습니다.",
+      "만약 우리가 이 주소를 직접 다뤄야 한다면 프로그래밍은 지옥이 될 것입니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "💡 해결책: 추상화(Abstraction)", 
+    items: [
+      "복잡한 주소값 대신 사람이 이해하기 쉬운 <b>이름</b>을 붙이는 것, 이것이 바로 <span class='highlight'>추상화</span>입니다.",
+      "<div class='code-breakdown'><b>메모리 주소(0x7FF...) → 추상화 → 변수명(userName)</b></div>",
+      "변수는 '데이터가 담긴 메모리 공간에 붙인 인간용 이름표'입니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 2] 메모리와 주소의 개념 매칭", 
+    desc: "현실 세계의 비유와 프로그래밍 개념을 연결해보세요.", 
+    code: `A. 0x12A34F (복잡한 16진수 값)   => (          )
+B. "myScore" (개발자가 지은 이름)  => (          )
+C. 100 (실제 데이터 값)          => (          )
+
+[보기: 식별자, 메모리 주소, 데이터]`, 
+    answer: "?????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 2] 메모리와 주소의 개념 매칭", 
+    desc: "현실 세계의 비유와 프로그래밍 개념을 연결해보세요.", 
+    code: `A. 0x12A34F (복잡한 16진수 값)   => (          )
+B. "myScore" (개발자가 지은 이름)  => (          )
+C. 100 (실제 데이터 값)          => (          )
+
+[보기: 식별자, 메모리 주소, 데이터]`, 
+    answer: "정답: A-메모리 주소 / B-식별자 / C-데이터" 
+  },
+  { 
+    type: "content", 
+    title: "🏷️ 식별자(Identifier)", 
+    items: [
+      "프로그래밍에서는 변수의 이름을 <span class='highlight'>식별자</span>라고 부릅니다.",
+      "어떤 값을 다른 값과 구별해주는 유일한 이름이어야 합니다.",
+      "좋은 식별자는 데이터의 <b>의미</b>를 담고 있어야 합니다. (예: <code>a</code> 보다는 <code>userAge</code>)"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 3] 좋은 식별자 고르기", 
+    desc: "다음 데이터에 가장 잘 어울리는 변수 이름을 보기에서 골라주세요.", 
+    code: `1. 사용자의 현재 위치 정보
+   => let (           ) = "Seoul";
+
+2. 쇼핑몰 상품의 가격
+   => let (           ) = 50000;
+
+[보기: a, b, location, price, data1]`, 
+    answer: "????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 3] 좋은 식별자 고르기", 
+    desc: "다음 데이터에 가장 잘 어울리는 변수 이름을 보기에서 골라주세요.", 
+    code: `1. 사용자의 현재 위치 정보
+   => let (           ) = "Seoul";
+
+2. 쇼핑몰 상품의 가격
+   => let (           ) = 50000;
+
+[보기: a, b, location, price, data1]`, 
+    answer: "정답: location / price (설명: 추상화의 핵심은 의미 전달입니다!)" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 4] Programiz 첫 코드 작성", 
+    desc: "Programiz 사이트에서 아래 코드를 완성하고 결과를 확인하세요.", 
+    code: `// 1. 숫자 100을 'myAge'라는 이름으로 추상화하세요.
+let myAge = [     ];
+
+// 2. 주소 대신 이름을 사용하여 화면에 출력하세요.
+console.log([        ]);`, 
+    answer: "????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 4] Programiz 첫 코드 작성", 
+    desc: "Programiz 사이트에서 아래 코드를 완성하고 결과를 확인하세요.", 
+    code: `// 1. 숫자 100을 'myAge'라는 이름으로 추상화하세요.
+let myAge = [     ];
+
+// 2. 주소 대신 이름을 사용하여 화면에 출력하세요.
+console.log([        ]);`, 
+    answer: "정답: 100 / myAge" 
+  },
+  { 
+    type: "content", 
+    title: "☕ 쉬는 시간 (10분)", 
+    items: [
+      "보이지 않는 메모리 주소와 이름을 연결하는 과정을 상상해보세요.",
+      "다음 시간에는 데이터를 더 안전하게 다루는 법을 배웁니다."
+    ]
+  },
+
+  // --- 2교시: 변수 선언과 스코프 ---
+  { 
+    type: "content", 
+    title: "2교시. 데이터의 이름과 규칙", 
+    items: [
+      "현대 자바스크립트에는 변수를 선언하는 두 가지 주요 방법이 있습니다.",
+      "<span class='highlight'>let</span>: 값이 변할 수 있는 변수",
+      "<span class='accent'>const</span>: 값이 절대 변하지 않는 상수"
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🔒 const (Constant, 상수)", 
+    items: [
+      "한 번 이름을 붙이면 다른 데이터로 바꿀 수 없습니다.",
+      "<div class='code-breakdown'><b>const PI = 3.14;</b></div>",
+      "값의 <b>재할당</b>이 불가능하므로, 실수로 값을 바꾸는 버그를 예방할 수 있습니다.",
+      "<div class='tip-box'>변경이 필요 없는 모든 데이터는 기본적으로 <b>const</b>를 사용하는 것이 권장됩니다.</div>"
+    ]
+  },
+  { 
+    type: "content", 
+    title: "🔓 let (Variable, 변수)", 
+    items: [
+      "값이 언제든지 바뀔 수 있는 상황에서 사용합니다.",
+      "<div class='code-breakdown'><b>let count = 0; count = 1; (OK!)</b></div>",
+      "사용자의 점수, 남은 시간 등 계속 업데이트되는 정보를 담을 때 적합합니다."
+    ]
+  },
+  { 
+    type: "content", 
+    title: "📐 변수 이름 짓기 규칙", 
+    items: [
+      "<b>CamelCase:</b> 첫 단어는 소문자, 다음 단어 첫 글자는 대문자 (예: <code>userPassword</code>)",
+      "<b>숫자 시작 금지:</b> <code>1user</code> (X), <code>user1</code> (O)",
+      "<b>예약어 금지:</b> <code>let, if, for</code> 등 자바스크립트가 이미 쓰고 있는 단어는 금지!"
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 5] 올바른 이름 고르기", 
+    desc: "다음 중 변수 이름으로 사용할 수 없는 것을 모두 고르세요.", 
+    code: `A. user_name
+B. 7days
+C. let
+D. myScore
+E. $price`, 
+    answer: "?????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 5] 올바른 이름 고르기", 
+    desc: "다음 중 변수 이름으로 사용할 수 없는 것을 모두 고르세요.", 
+    code: `A. user_name
+B. 7days
+C. let
+D. myScore
+E. $price`, 
+    answer: "정답: B (숫자 시작), C (예약어)" 
+  },
+  { 
+    type: "content", 
+    title: "🚧 블록 스코프(Block Scope)", 
+    items: [
+      "변수는 선언된 <b>중괄호 { }</b> 영역 안에서만 살아있습니다.",
+      "이 영역을 <span class='highlight'>블록 스코프</span>라고 부릅니다.",
+      "울타리 밖에서는 울타리 안의 변수를 볼 수도, 사용할 수도 없습니다."
+    ]
+  },
+  { 
+    type: "code", 
+    title: "[실습 6] 스코프 챌린지 1", 
+    desc: "다음 코드의 출력 결과를 예측해보세요.", 
+    code: `{
+    let gift = "MacBook";
+}
+console.log(gift);`, 
+    answer: "????" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 6] 스코프 챌린지 1", 
+    desc: "다음 코드의 출력 결과를 예측해보세요.", 
+    code: `{
+    let gift = "MacBook";
+}
+console.log(gift);`, 
+    answer: "정답: 에러 발생! (설명: gift는 중괄호 안에서만 존재하며 밖으로 나오면 소멸합니다.)" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 7] 스코프 챌린지 2", 
+    desc: "다음 코드의 출력 결과를 예측해보세요.", 
+    code: `const sky = "Blue";
+{
+    console.log(sky);
+}`, 
+    answer: "?????" 
+  },
+   { 
+    type: "code", 
+    title: "[실습 7] 스코프 챌린지 2", 
+    desc: "다음 코드의 출력 결과를 예측해보세요.", 
+    code: `const sky = "Blue";
+{
+    console.log(sky);
+}`, 
+    answer: "정답: Blue (설명: 밖에서 선언된 변수는 안에서도 보입니다!)" 
+  },
+  { 
+    type: "code", 
+    title: "[실습 8] 최종 종합 실습 (Programiz)", 
+    desc: "상황에 맞는 선언 방식과 이름을 사용하여 코드를 완성하세요.", 
+    code: `// 1. 자신의 이름을 저장하는 변수 (바뀌지 않음)
+[     ] myName = "James";
+
+// 2. 현재 시간을 저장하는 변수 (바뀔 수 있음)
+[     ] currentTime = 10;
+currentTime = 11;
+
+console.log(myName, currentTime);`, 
+    answer: "????" 
+  },
+    { 
+    type: "code", 
+    title: "[실습 8] 최종 종합 실습 (Programiz)", 
+    desc: "상황에 맞는 선언 방식과 이름을 사용하여 코드를 완성하세요.", 
+    code: `// 1. 자신의 이름을 저장하는 변수 (바뀌지 않음)
+[     ] myName = "James";
+
+// 2. 현재 시간을 저장하는 변수 (바뀔 수 있음)
+[     ] currentTime = 10;
+currentTime = 11;
+
+console.log(myName, currentTime);`, 
+    answer: "정답: const / let" 
+  },
+  { 
+    type: "content", 
+    title: "📝 오늘의 요약", 
+    items: [
+      "<b>Runtime:</b> 자바스크립트가 실행되는 환경 (브라우저, Node.js)",
+      "<b>Abstraction:</b> 복잡한 메모리 주소를 쉬운 이름으로 바꾸는 과정",
+      "<b>let & const:</b> 재할당 가능 여부에 따른 현대적 선언 방식",
+      "<b>Block Scope:</b> 중괄호 { }가 변수의 수명을 결정하는 울타리"
+    ]
+  },
+  { 
+    type: "title", 
+    title: "수고하셨습니다! 👏", 
+    subtitle: "다음 차시: <span class='highlight'>데이터 타입과 연산자</span><br><br><span style='color:#777;'>질문이 있다면 지금 바로 말씀해 주세요.</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `
+      <div style="text-align:center;" class="fade-in">
+        <h1 style="font-size:3.5rem; margin-bottom:1.5rem; color:#61dafb; line-height:1.2;">${data.title}</h1>
+        <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+        <p style="font-size:1.6rem; line-height:1.6; color:#ccc; margin-top:2rem;">${data.subtitle}</p>
+      </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #333; padding-bottom:1.5rem; margin-bottom:2.5rem; margin-top:0;">${data.title}</h2>
+        <ul>${lis}</ul>
+      </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `
+      <div class="fade-in">
+        <h2 style="font-size:2.2rem; color:#facc15; border-bottom:1px solid #333; padding-bottom:1.2rem; margin-bottom:1.2rem; margin-top:0;">${data.title}</h2>
+        <p style="font-size:1.2rem; margin-bottom:1rem; color:#aaa;">${data.desc}</p>
+        <div style="position:relative;">
+          <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+        </div>
+        <div class="practice-box">
+          <p style="font-weight:bold; color:#f87171; font-size:1.15rem; margin:0;">💡 ${data.answer}</p>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="slide-content">
+      ${contentHtml}
+    </div>
+    <div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>
+  `;
+  
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function nextSlide() {
+  if (currentIndex < slideData.length - 1) {
+    currentIndex++;
+    renderSlide(currentIndex);
+  }
+}
+
+function prevSlide() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSlide(currentIndex);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    prevSlide();
+  }
+});
+
+renderSlide(currentIndex);
+</script>
+</body>
+</html>

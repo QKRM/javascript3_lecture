@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS 4주차 14차시 - 인터랙션 고도화</title>
+<style>
+  body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #0f172a; 
+    color: #f1f5f9; 
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; 
+  }
+  .slide-container { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 2rem; 
+    position: relative;
+  }
+  .slide-content { 
+    max-width: 1150px; 
+    width: 100%; 
+    background: #1e293b; 
+    padding: 3rem; 
+    border-radius: 24px; 
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    box-sizing: border-box;
+    min-height: 650px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #334155;
+    transition: all 0.3s ease;
+  }
+  h1 { font-size: 3.5rem; color: #38bdf8; line-height: 1.2; margin-bottom: 1rem; }
+  h2 { font-size: 2.2rem; color: #4ade80; border-bottom: 1px solid #334155; padding-bottom: 1.5rem; margin-bottom: 2rem; margin-top: 0; }
+  ul { list-style-type: none; padding-left: 0; }
+  li { position: relative; padding-left: 2rem; margin-bottom: 1.1rem; font-size: 1.15rem; line-height: 1.6; color: #cbd5e1; }
+  li::before { content: '→'; position: absolute; left: 0; color: #38bdf8; font-weight: bold; }
+  
+  pre { 
+    background: #020617; 
+    padding: 1.2rem; 
+    border-radius: 12px; 
+    overflow-x: auto; 
+    font-family: 'Fira Code', 'Consolas', monospace; 
+    font-size: 0.85rem; 
+    color: #94a3b8; 
+    border: 1px solid #1e293b; 
+    line-height: 1.4;
+    margin: 0.5rem 0;
+  }
+  
+  .nav-btn { 
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    font-size: 1.5rem; 
+    width: 54px;
+    height: 54px;
+    cursor: pointer; 
+    border-radius: 50%; 
+    transition: all 0.3s; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .nav-btn:hover { background: #38bdf8; color: #0f172a; border-color: #38bdf8; transform: translateY(-50%) scale(1.1); }
+  #prevBtn { left: 2.5rem; }
+  #nextBtn { right: 2.5rem; }
+  
+  .page-num { position: absolute; bottom: 2.5rem; right: 4rem; font-size: 1.1rem; color: #475569; font-weight: 600; letter-spacing: 2px; }
+  .highlight { color: #38bdf8; font-weight: 700; }
+  .accent { color: #fbbf24; font-weight: 700; }
+  .warn { color: #f87171; font-weight: 700; }
+  
+  .practice-box { background: rgba(56, 189, 248, 0.05); border: 1px solid #38bdf8; padding: 1.1rem; border-radius: 12px; margin-top: 0.8rem; }
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<button id="prevBtn" class="nav-btn" onclick="prevSlide()">&#10094;</button>
+<div class="slide-container" id="app"></div>
+<button id="nextBtn" class="nav-btn" onclick="nextSlide()">&#10095;</button>
+
+<script>
+const slideData = [
+  // --- Intro ---
+  { 
+    type: "title", 
+    title: "JavaScript 입문: 4주차 14차시", 
+    subtitle: "<span class='highlight' style='font-size:2rem;'>인터랙션 고도화: 끊김 없는 UX 설계</span><br><br><span style='color:#64748b; font-size:1.1rem;'>1교시: 시각적 피드백과 애니메이션 최적화 (실습 5종)<br>2교시: 실제 서비스형 기능 구현 (쇼핑몰 & 대시보드)</span>" 
+  },
+  {
+    type: "content",
+    title: "🎯 오늘의 학습 목표",
+    items: [
+      "<span class='highlight'>.stop()</span> 메서드를 활용해 애니메이션 큐 중첩을 완벽히 방어합니다.",
+      "사용자의 입력과 마우스 움직임에 반응하는 <span class='highlight'>실시간 피드백</span> 시스템을 구축합니다.",
+      "스크롤 위치와 요소의 가시성을 연동하는 <span class='highlight'>고급 인터랙션</span>을 마스터합니다.",
+      "개별 인터랙션들을 조합하여 <span class='highlight'>상용 수준의 기능형 페이지</span>를 설계해봅니다."
+    ]
+  },
+
+  // 예제 1: stop()
+  { 
+    type: "code", 
+    title: "[Ex 1] 광클 방지 버튼 (구조/디자인)", 
+    desc: "애니메이션이 대기열에 쌓여 무한히 반복되는 현상을 막아봅니다.", 
+    code: `<style>
+  .moving-box { 
+    width: 100px; height: 100px; background: #38bdf8; 
+    border-radius: 12px; margin-bottom: 20px; 
+  }
+</style>
+
+<div class="moving-box"></div>
+<button id="anim-btn">이동하기 (광클 테스트)</button>`, 
+    answer: "설명: 버튼을 여러 번 연타해도 박스가 엉뚱한 곳으로 가지 않게 제어할 예정입니다." 
+  },
+  { 
+    type: "code", 
+    title: "[Ex 1] 광클 방지 버튼 (로직)", 
+    desc: ".stop()을 사용하여 현재 동작을 즉시 초기화합니다.", 
+    code: `<script>
+  $("#anim-btn").click(function() {
+      // .stop()을 넣으면 새로운 클릭 시 이전 동작을 중단하고 즉시 새로 시작
+      $(".moving-box").stop().animate({
+          marginLeft: "+=50px"
+      }, 300);
+  });
+<\/script>`, 
+    answer: "핵심: 모든 jQuery 애니메이션 메서드 직전에 .stop()을 붙이는 것은 실무 공식입니다." 
+  },
+
+  // 예제 2: Hover 피드백
+  { 
+    type: "code", 
+    title: "[Ex 2] 카드 UI 부드러운 호버 (구조/디자인)", 
+    desc: "마우스가 올라갔을 때 정보가 나타나는 세련된 카드입니다.", 
+    code: `<style>
+  .card { width: 300px; height: 400px; overflow: hidden; position: relative; border-radius: 20px; background: #334155; }
+  .card-img { width: 100%; height: 100%; background: #475569; transition: 0.6s; }
+  .card-info { 
+    position: absolute; bottom: -120px; left: 0; width: 100%; height: 120px;
+    background: rgba(0,0,0,0.85); padding: 20px; box-sizing: border-box;
+  }
+</style>
+
+<div class="card">
+  <div class="card-img"></div>
+  <div class="card-info"><h4>상품 상세 제목</h4><p>간단한 설명입니다.</p></div>
+</div>`, 
+    answer: "설명: CSS transition과 jQuery의 정교한 타이밍을 결합합니다." 
+  },
+  { 
+    type: "code", 
+    title: "[Ex 2] 카드 UI 부드러운 호버 (로직)", 
+    desc: "mouseenter와 mouseleave를 정교하게 제어합니다.", 
+    code: `<script>
+  $(".card").on("mouseenter", function() {
+      // 이미지 확대(CSS) 및 정보창 위로 슬라이딩(JS)
+      $(this).find(".card-img").css("transform", "scale(1.1)");
+      $(this).find(".card-info").stop().animate({ bottom: 0 }, 400);
+  });
+
+  $(".card").on("mouseleave", function() {
+      // 원상 복구 시에도 stop()으로 튕김 현상 방지
+      $(this).find(".card-img").css("transform", "scale(1.0)");
+      $(this).find(".card-info").stop().animate({ bottom: "-120px" }, 400);
+  });
+<\/script>`, 
+    answer: "팁: 호버 영역을 벗어날 때 애니메이션이 도중에 끊겨도 .stop() 덕분에 자연스럽게 처리됩니다." 
+  },
+
+  // 예제 3: Scroll Top 버튼
+  { 
+    type: "code", 
+    title: "[Ex 3] 스마트 스크롤 버튼 (구조/디자인)", 
+    desc: "스크롤 위치에 따라 나타나고 사라지는 TOP 버튼입니다.", 
+    code: `<style>
+  #top-btn { 
+    position: fixed; bottom: 40px; right: 40px; 
+    width: 60px; height: 60px; background: #fbbf24; border: none;
+    display: none; border-radius: 50%; cursor: pointer; font-weight: bold;
+  }
+</style>
+
+<div style="height: 3000px; padding: 20px;">스크롤을 아주 많이 내려보세요...</div>
+<button id="top-btn">TOP</button>`, 
+    answer: "설명: position: fixed로 화면에 고정시키고 처음에 숨겨둡니다." 
+  },
+  { 
+    type: "code", 
+    title: "[Ex 3] 스마트 스크롤 버튼 (로직)", 
+    desc: "실시간 스크롤 감지 이벤트를 활용합니다.", 
+    code: `<script>
+  $(window).scroll(function() {
+      // 현재 스크롤바가 위에서부터 500px 이상 내려왔을 때
+      if ($(this).scrollTop() > 500) {
+          $("#top-btn").stop().fadeIn(200);
+      } else {
+          $("#top-btn").stop().fadeOut(200);
+      }
+  });
+
+  $("#top-btn").click(function() {
+      // html과 body 전체를 스크롤 최상단으로 애니메이션 이동
+      $("html, body").stop().animate({ scrollTop: 0 }, 600);
+  });
+<\/script>`, 
+    answer: "실무: 윈도우 스크롤 이벤트는 성능을 위해 .stop() 처리가 필수적입니다." 
+  },
+
+  // 예제 4: 실시간 폼 피드백
+  { 
+    type: "code", 
+    title: "[Ex 4] 실시간 입력 피드백 (구조/디자인)", 
+    desc: "사용자가 타이핑하는 즉시 상태를 알려주는 UI입니다.", 
+    code: `<style>
+  #pw-input { padding: 12px; width: 250px; border: 2px solid #ccc; border-radius: 8px; outline: none; }
+  #msg { font-size: 0.9rem; margin-top: 8px; font-weight: 600; }
+</style>
+
+<input type="password" id="pw-input" placeholder="비밀번호 8자 이상">
+<p id="msg">비밀번호를 입력해주세요.</p>`, 
+    answer: "설명: input 이벤트를 통해 실시간으로 클래스나 스타일을 변경할 준비를 합니다." 
+  },
+  { 
+    type: "code", 
+    title: "[Ex 4] 실시간 입력 피드백 (로직)", 
+    desc: "값의 길이에 따라 시각적 경고/승인을 제공합니다.", 
+    code: `<script>
+  $("#pw-input").on("input", function() {
+      const currentVal = $(this).val();
+      
+      if (currentVal.length >= 8) {
+          $(this).css("border-color", "#4ade80");
+          $("#msg").text("사용 가능한 비밀번호입니다.").css("color", "#4ade80");
+      } else {
+          $(this).css("border-color", "#f87171");
+          $("#msg").text("최소 8자 이상 입력이 필요합니다.").css("color", "#f87171");
+      }
+  });
+<\/script>`, 
+    answer: "특징: '완료' 버튼을 누르기 전 미리 소통하는 것이 인터랙션의 핵심입니다." 
+  },
+
+  // 예제 5: 도트 인디케이터
+  { 
+    type: "code", 
+    title: "[Ex 5] 활성 도트 인디케이터 (구조/디자인)", 
+    desc: "현재 선택된 위치를 점으로 표현하는 내비게이션입니다.", 
+    code: `<style>
+  .dot-wrap { display: flex; gap: 12px; }
+  .dot { width: 16px; height: 16px; border: 2px solid #38bdf8; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+  .dot.active { background: #38bdf8; width: 40px; border-radius: 10px; } /* 선택된 점은 길게 변함 */
+</style>
+
+<div class="dot-wrap">
+  <div class="dot active"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+</div>`, 
+    answer: "설명: .active 클래스 하나만으로 형태가 변하는 CSS 설계를 먼저 확인하세요." 
+  },
+  { 
+    type: "code", 
+    title: "[Ex 5] 활성 도트 인디케이터 (로직)", 
+    desc: "선택적 활성화 로직을 한 줄로 끝내봅니다.", 
+    code: `<script>
+  $(".dot").click(function() {
+      // 1. 모든 도트에서 active를 제거하여 초기화
+      $(".dot").removeClass("active");
+      
+      // 2. 방금 클릭한 도트(this)에만 active 추가
+      $(this).addClass("active");
+      
+      // 3. (심화) 몇 번째 점인지 확인하여 로그 출력
+      console.log(($(this).index() + 1) + "번 페이지 활성화");
+  });
+<\/script>`, 
+    answer: "핵심: '나 제외 남들 제거' 패턴은 모든 UI 활성화 로직의 기본입니다." 
+  },
+
+  // --- 2교시: 실무 페이지 사례 ---
+  { 
+    type: "content", 
+    title: "2교시. 실무형 인터랙션: 조각들을 하나로", 
+    items: [
+      "지금까지 배운 5개의 예제는 모두 웹 서비스의 '부품'들입니다.",
+      "이제 이 부품들을 유기적으로 결합하여 <span class='accent'>실제 사용자 페이지</span>의 흐름을 만들어봅니다.",
+      "<b>Case 1:</b> 쇼핑몰 상품 상세 (아코디언 + 모달 + 위시리스트)",
+      "<b>Case 2:</b> 관리자 대시보드 (사이드바 + 배타적 서브메뉴)"
+    ]
+  },
+
+  // 실무 사례 1
+  { 
+    type: "code", 
+    title: "쇼핑몰 상세 페이지 (구조/디자인)", 
+    desc: "여러 기능이 결합된 종합 UI 구조입니다.", 
+    code: `<style>
+  .product-info { width: 350px; background: #fff; padding: 20px; color: #333; border-radius: 12px; }
+  .detail-q { padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; }
+  .detail-a { display: none; padding: 15px; background: #f9f9f9; font-size: 0.9rem; }
+  .btn-wish { border: none; background: none; font-size: 24px; color: #ccc; cursor: pointer; }
+  .btn-wish.active { color: #f87171; }
+</style>
+
+<div class="product-info">
+  <h2>프리미엄 기계식 키보드</h2>
+  <button class="btn-wish">♥</button>
+  
+  <div class="accordion-box">
+    <div class="detail-q">상품 상세 스펙</div>
+    <div class="detail-a">축: 저소음 적축 / 연결: C-Type 유선</div>
+    <div class="detail-q">배송 및 환불 안내</div>
+    <div class="detail-a">결제 후 2일 이내 출고됩니다.</div>
+  </div>
+  
+  <button id="buy-now" style="width:100%; padding:15px; margin-top:20px; background:#38bdf8; color:#fff; border:none; border-radius:8px;">구매하기</button>
+</div>`, 
+    answer: "설명: 아코디언과 상태 토글 버튼이 공존하는 현실적인 쇼핑몰 구조입니다." 
+  },
+  { 
+    type: "code", 
+    title: "쇼핑몰 상세 페이지 (통합 로직)", 
+    desc: "사용자의 다양한 행동을 한 번에 처리합니다.", 
+    code: `<script>
+  // 1. 상세정보 아코디언 제어
+  $(".detail-q").click(function(){
+      $(this).next(".detail-a").stop().slideToggle(300);
+      $(this).parent().siblings().find(".detail-a").stop().slideUp(300);
+  });
+
+  // 2. 찜하기 하트 토글
+  $(".btn-wish").click(function(){
+      $(this).toggleClass("active");
+  });
+
+  // 3. 구매 모달 (앞선 차시 복습)
+  $("#buy-now").click(function(){
+      alert("로그인이 필요한 서비스입니다. (모달 연동 포인트)");
+  });
+<\/script>`, 
+    answer: "분석: 개별적으로 배운 로직들이 한 페이지 안에서 서로 방해하지 않고 조화롭게 돌아갑니다." 
+  },
+
+  // 실무 사례 2
+  { 
+    type: "code", 
+    title: "대시보드 사이드바 (구조/디자인)", 
+    desc: "기업용 솔루션의 고정 사이드바 메뉴 구조입니다.", 
+    code: `<style>
+  .admin-sidebar { width: 240px; height: 100vh; background: #1e293b; color: #fff; padding-top: 20px; }
+  .main-menu { padding: 15px 20px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; }
+  .main-menu:hover { background: #334155; }
+  .main-menu.active { background: #0f172a; border-left-color: #38bdf8; color: #38bdf8; }
+  .sub-menu { display: none; background: #0f172a; padding-left: 30px; }
+  .sub-item { padding: 10px 0; color: #94a3b8; font-size: 0.9rem; cursor: pointer; }
+</style>
+
+<div class="admin-sidebar">
+  <div class="main-menu">사용자 관리</div>
+  <div class="sub-menu">
+    <div class="sub-item">전체 회원</div><div class="sub-item">탈퇴 회원</div>
+  </div>
+  <div class="main-menu">콘텐츠 관리</div>
+  <div class="sub-menu">
+    <div class="sub-item">게시글 목록</div><div class="sub-item">댓글 관리</div>
+  </div>
+</div>`, 
+    answer: "설명: 메뉴가 선택되었을 때 좌측 바가 생기는 active 상태를 눈여겨보세요." 
+  },
+  { 
+    type: "code", 
+    title: "대시보드 사이드바 (로직)", 
+    desc: "배타적 로직을 활용한 부드러운 메뉴 이동입니다.", 
+    code: `<script>
+  $(".main-menu").click(function() {
+      // 1. 나 제외 다른 메뉴들의 활성 표시 제거 및 서브메뉴 닫기
+      $(".main-menu").not(this).removeClass("active");
+      $(".sub-menu").not($(this).next()).stop().slideUp(200);
+
+      // 2. 현재 선택한 메뉴 활성화 및 서브메뉴 토글
+      $(this).toggleClass("active");
+      $(this).next(".sub-menu").stop().slideToggle(200);
+  });
+<\/script>`, 
+    answer: "정답: .not(this)를 활용해 대상을 정밀하게 압축하는 것이 전문가의 팁입니다." 
+  },
+
+  { 
+    type: "content", 
+    title: "📝 14차시 최종 요약", 
+    items: [
+      "<b>애니메이션 방어:</b> <code>.stop()</code>은 사용자 경험(UX)을 결정짓는 최후의 보루다.",
+      "<b>시각적 보상:</b> 모든 입력과 클릭에는 색상, 크기, 위치의 변화로 '응답'해야 한다.",
+      "<b>상태 분리:</b> 디자인은 CSS 클래스에, 상태 판단은 JS 변수와 메서드에 맡겨라.",
+      "<b>실무 설계:</b> 개별 기능을 '부품'화하고, 페이지 시나리오에 맞춰 조립하라."
+    ]
+  },
+  { 
+    type: "title", 
+    title: "4주차 인터랙션 마스터! 🏆", 
+    subtitle: "<span class='highlight'>이제 여러분은 단순한 웹 개발자를 넘어 '사용자 경험 설계자'입니다.</span><br><br><span style='color:#777;'>다음 차시 예고: 4주차 종합 프로젝트 - 인터랙티브 포트폴리오 사이트 완성</span>" 
+  }
+];
+
+let currentIndex = 0;
+
+function renderSlide(index) {
+  const app = document.getElementById('app');
+  const data = slideData[index];
+  let contentHtml = '';
+
+  if (data.type === 'title') {
+    contentHtml = `<div style="text-align:center;" class="fade-in">
+      <h1 style="font-size:3.5rem;">${data.title}</h1>
+      <div style="width:100px; height:4px; background:#4ade80; margin: 2rem auto;"></div>
+      <p style="font-size:1.6rem;">${data.subtitle}</p>
+    </div>`;
+  } else if (data.type === 'content') {
+    const lis = data.items.map(item => `<li>${item}</li>`).join('');
+    contentHtml = `<div class="fade-in">
+      <h2 style="font-size:2.4rem; color:#4ade80; border-bottom:1px solid #333; padding-bottom:1.5rem;">${data.title}</h2>
+      <ul>${lis}</ul>
+    </div>`;
+  } else if (data.type === 'code') {
+    contentHtml = `<div class="fade-in">
+      <h2 style="font-size:2.1rem; color:#fbbf24; border-bottom:1px solid #333; padding-bottom:0.8rem;">${data.title}</h2>
+      <p style="font-size:1.05rem; color:#94a3b8; margin-bottom:0.8rem;">${data.desc}</p>
+      <pre><code>${data.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+      <div class="practice-box"><p style="font-weight:bold; color:#38bdf8; margin:0;">💡 실무 지식: ${data.answer}</p></div>
+    </div>`;
+  }
+
+  app.innerHTML = `<div class="slide-content">${contentHtml}</div><div class="page-num">${String(index + 1).padStart(2, '0')} / ${slideData.length}</div>`;
+  document.getElementById('prevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.opacity = index === slideData.length - 1 ? '0.2' : '1';
+}
+
+function nextSlide() { if (currentIndex < slideData.length - 1) { currentIndex++; renderSlide(currentIndex); } }
+function prevSlide() { if (currentIndex > 0) { currentIndex--; renderSlide(currentIndex); } }
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') nextSlide(); else if (e.key === 'ArrowLeft') prevSlide(); });
+renderSlide(currentIndex);
+</script>
+</body>
+</html>
