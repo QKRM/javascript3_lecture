@@ -189,12 +189,17 @@
   .pager .next{text-align:right;}
   .pager a.disabled{opacity:.35;pointer-events:none;}
 
-  .mobiletop{display:none;}
+  .ltopbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.7rem;
+    padding:.7rem 1.2rem;background:rgba(18,18,18,.88);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .side-toggle{display:inline-flex;align-items:center;gap:.45rem;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);font-size:.85rem;font-weight:600;padding:.45rem .9rem;border-radius:8px;cursor:pointer;text-decoration:none;}
+  .side-toggle:hover{border-color:var(--js);color:var(--js);}
+  #lessonView .side{transition:width .2s ease;}
+  #lessonView.collapsed .side{display:none;}
   @media(max-width:880px){
-    .sidebar,.side{display:none;}
+    .sidebar{display:none;}
     .main{padding:1.5rem;}
-    .mobiletop{display:flex;gap:1rem;align-items:center;padding:1rem;border-bottom:1px solid var(--border);}
-    .mobiletop a{color:var(--js);font-weight:600;font-size:.9rem;cursor:pointer;}
+    #lessonView .side{position:fixed;z-index:30;left:0;top:0;height:100vh;width:84%;max-width:320px;box-shadow:0 0 40px rgba(0,0,0,.6);}
     .content{padding:1.5rem 1.2rem 5rem;}
   }
 </style>
@@ -242,7 +247,10 @@
     <nav id="lessonSideNav"></nav>
   </aside>
   <div class="lmain">
-    <div class="mobiletop"><a data-home>← 강의 목록</a></div>
+    <div class="ltopbar">
+      <button class="side-toggle" id="sideToggle">☰ 강의 목록</button>
+      <a class="side-toggle" data-home>← 전체 목록으로</a>
+    </div>
     <div class="content" id="lessonContent"></div>
   </div>
 </div>
@@ -447,11 +455,17 @@ function renderLesson(id){
 }
 
 /* ===================== ROUTER ===================== */
+/* 강의 목록 사이드바 접기/펴기 (기본 접힘) */
+let sideOpen = false;
+function applySide(){ document.getElementById("lessonView").classList.toggle("collapsed", !sideOpen); }
+document.getElementById("sideToggle").addEventListener("click",()=>{ sideOpen=!sideOpen; applySide(); });
+
 function route(){
   const m=location.hash.match(/^#lesson\/(.+)$/);
   if(m){
     document.getElementById("hubView").style.display="none";
     document.getElementById("lessonView").style.display="flex";
+    applySide();
     renderLesson(decodeURIComponent(m[1]));
     window.scrollTo(0,0);
   }else{
